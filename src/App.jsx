@@ -23,12 +23,19 @@ function App() {
     setQuestions(updatedQuestions);
   };
 
+  // Delete a single question
+  const deleteQuestion = (id) => {
+    const updatedQuestions = questions.filter((q) => q.id !== id);
+    saveQuestionsToStorage(updatedQuestions);
+  };
+
   const handelQuestion = async () => {
     if (!question.trim()) return;
     
     // Add question to the list and save to localStorage
     const updatedQuestions = [...questions, { id: Date.now(), text: question }];
     saveQuestionsToStorage(updatedQuestions);
+    setQuestion(""); // Clear text box immediately
 
     const res = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
@@ -51,7 +58,6 @@ function App() {
     const data = await res.json();
     console.log(data)
     setResponse(data.candidates[0].content.parts[0].text);
-    setQuestion("");
   };
 
 
@@ -72,10 +78,17 @@ function App() {
       questions.map((q) => (
         <li
           key={q.id}
-          className="text-zinc-300 text-sm bg-zinc-700 p-2 rounded cursor-pointer hover:bg-zinc-600 break-words"
+          className="text-zinc-300 text-sm bg-zinc-700 p-2 rounded cursor-pointer hover:bg-zinc-600 break-words flex items-center justify-between"
           title={q.text}
         >
-          {q.text.substring(0, 50)}{q.text.length > 50 ? "..." : ""}
+          <span className="flex-1">{q.text.substring(0, 50)}{q.text.length > 50 ? "..." : ""}</span>
+          <button
+            onClick={() => deleteQuestion(q.id)}
+            className="ml-2 text-red-400 hover:text-red-600 font-bold text-lg"
+            title="Delete question"
+          >
+            ✕
+          </button>
         </li>
       ))
     )}
@@ -101,7 +114,8 @@ dsfdsfdsfdsf
   <input 
     type="text"
     value={question}
-    onChange={(event)=>setQuestion(event.target.value)}  
+    onChange={(event)=>setQuestion(event.target.value)}
+    onKeyPress={(event) => event.key === 'Enter' && handelQuestion()}
     placeholder="Send a message..." 
     className="flex-1 bg-transparent text-white placeholder-zinc-400 outline-none px-2"
   />
